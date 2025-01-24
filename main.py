@@ -1,63 +1,36 @@
-import random
-import asyncio
-import sys 
-import select
+import pygame
 import os
-from nava import play, stop
+import time
 
-async def menu(sound):
-    rlist, _, _ = select.select([sys.stdin], [],[], 20)
-    if rlist:
-        usin=input()
-        match usin:
-            case "stop":
-                stop(sound)
-                return True
-            case "skip":
-                stop(sound)
-                return False
-            case "exit":
-                exit(0)
+pygame.mixer.init()
 
-async def player(playlist):
-    for item in playlist:
-        print("Now playing:", item, "\nCommands (stop, skip, exit available for 20 seconds after song start)")
-        sound = play(item.strip(), async_mode=True)
-        process = asyncio.create_task(menu(sound))
-        menopt = await process
-        if menopt:
+def single(item):
+    script_path = os.path.dirname(os.path.abspath(__file__))
+    os.system("curl -O https://eyescary-development.github.io/CDN/musik/"+item+".mp3")
+    pygame.mixer.music.load(script_path+"/"+item.split("/")[1]+".mp3")
+    pygame.mixer.music.play()
+    try:
+      while True:
+        command = input("Enter 'pause', 'resume', or 'stop': ").strip().lower()
+        if command == 'pause':
+            pygame.mixer.music.pause()
+        elif command == 'resume':
+            pygame.mixer.music.unpause()
+        elif command == 'stop':
+            pygame.mixer.music.stop()
             break
-        try:
-            os.wait()
-        except ChildProcessError:
-            print(end='')
-        os.system('cls' if os.name == 'nt' else 'clear')
+        else:
+            print("Invalid command.")
+    except KeyboardInterrupt:
+        pygame.mixer.music.stop()
+    os.system("rm "+item.split("/")[1]+".mp3")
 
 def main():
-    print("Welcome to Musik")
-
-    pllmdata=input("Select a playlist you have created metadata for: ")
-    if not pllmdata.endswith(".txt"):
-        pllmdata += ".txt"
-    print("Loading...")
-
-    with open(pllmdata, 'r') as file:
-        playlist=file.readlines()
-
-    shon=input("Shuffle the playlist or play as ordered in the playlist metadata [y/n]: ")
-
-    if shon.lower() == "y":
-        random.shuffle(playlist)
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-
-    asyncio.run(player(playlist))
-    print("Looks like you either stopped or the music ended, what are you going to do now?")
-    usin=input("Play another playlist(1) or quit(2): ")
-    if usin == "1":
-        pass
+  while True:
+    playlistorno=input("use or create a playlist?: ")
+    if playlistorno == "y":
+        print("WIP")
     else:
-        exit(0)
+        single(input("Write song in form of album/song (example ESDP1/AGPM): "))
 
-if __name__ == "__main__":
-    while True: main()
+main()
